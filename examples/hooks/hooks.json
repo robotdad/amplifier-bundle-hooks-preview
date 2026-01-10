@@ -1,0 +1,89 @@
+{
+  "description": "Example hooks demonstrating all Phase 1 + 2 events",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"[SessionStart] Session $AMPLIFIER_SESSION_ID started at $(date)\" >> /tmp/hooks-preview.log"
+          }
+        ]
+      },
+      {
+        "matcher": "resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"[SessionStart:Resume] Resuming session\" >> /tmp/hooks-preview.log"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"[PreToolUse:Bash] Command: $(cat | jq -r '.input.command // \"unknown\"')\" >> /tmp/hooks-preview.log"
+          }
+        ]
+      },
+      {
+        "matcher": "write_file|edit_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"[PreToolUse:Write] File operation on: $(cat | jq -r '.input.file_path // .input.path // \"unknown\"')\" >> /tmp/hooks-preview.log"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"[PostToolUse] Tool completed\" >> /tmp/hooks-preview.log"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"[UserPromptSubmit] New prompt received\" >> /tmp/hooks-preview.log"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"[Stop] Response complete\" >> /tmp/hooks-preview.log"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"[SessionEnd] Session ended at $(date)\" >> /tmp/hooks-preview.log"
+          }
+        ]
+      }
+    ]
+  }
+}
