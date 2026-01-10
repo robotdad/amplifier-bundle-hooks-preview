@@ -134,7 +134,34 @@ Review $ARGUMENTS for code quality and security issues.
 EOF
 ```
 
-### 4. Run and verify
+### 4. Add example skill with hooks (optional)
+
+```bash
+mkdir -p .amplifier/skills/code-guardian
+
+# Note: File MUST be named SKILL.md (uppercase)
+# Note: name and description MUST be at top level (not nested under skill:)
+cat > .amplifier/skills/code-guardian/SKILL.md << 'EOF'
+---
+name: code-guardian
+description: Guards code quality with hooks
+version: 1.0.0
+
+hooks:
+  PreToolUse:
+    - matcher: "bash"
+      hooks:
+        - type: command
+          command: "echo \"[Skill Hook] Bash command\" >> /tmp/hooks.log"
+---
+
+# Code Guardian
+
+This skill adds hooks that fire when loaded.
+EOF
+```
+
+### 5. Run and verify
 
 ```bash
 # Start session
@@ -163,6 +190,39 @@ tail -f /tmp/hooks.log
 - Requires modified app-cli (not yet upstream)
 - Prompt-based hooks (Phase 2.5) not yet implemented
 - Command approval integration pending
+
+## Skill File Format Requirements
+
+Skills with hooks have specific format requirements:
+
+| Requirement | Details |
+|-------------|---------|
+| Filename | Must be `SKILL.md` (uppercase) |
+| Frontmatter | `name` and `description` at top level (not nested) |
+| Directory | Should match the `name` field |
+
+**Correct format:**
+```yaml
+---
+name: my-skill
+description: What this skill does
+hooks:
+  PreToolUse:
+    - matcher: "bash"
+      hooks:
+        - type: command
+          command: "echo 'hook fired'"
+---
+```
+
+**Incorrect format** (will not be discovered):
+```yaml
+---
+skill:
+  name: my-skill  # Wrong: nested under skill:
+  description: ...
+---
+```
 
 ## After Testing
 

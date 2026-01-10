@@ -27,7 +27,7 @@ This bundle demonstrates how hooks-shell, skills, and slash-commands work togeth
 │  └─────────────────┘                                        │
 │                                                              │
 │  ┌─────────────────┐                                        │
-│  │ tool-skills     │◄── .amplifier/skills/*/skill.md        │
+│  │ tool-skills     │◄── .amplifier/skills/*/SKILL.md        │
 │  │ (tool + hook)   │──► Registers skill hooks dynamically   │
 │  └─────────────────┘                                        │
 └─────────────────────────────────────────────────────────────┘
@@ -58,7 +58,11 @@ When a skill is loaded via `load_skill`, the tool-skills module:
 4. On unload, hooks are removed
 
 ```yaml
-# In skill.md frontmatter
+# In SKILL.md frontmatter (note: uppercase filename required)
+# name and description must be at top level, not nested
+name: my-skill
+description: A skill with hooks
+
 hooks:
   PreToolUse:
     - matcher: "write_file"
@@ -66,6 +70,11 @@ hooks:
         - type: command
           command: "echo 'Write detected'"
 ```
+
+**Important skill file requirements:**
+- File must be named `SKILL.md` (uppercase)
+- `name` and `description` must be at the top level of frontmatter
+- Directory name should match the `name` field
 
 ### 3. slash-command → approval hooks (future)
 

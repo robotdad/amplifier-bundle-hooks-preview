@@ -1,8 +1,7 @@
 ---
-skill:
-  name: code-guardian
-  version: 1.0.0
-  description: Skill with hooks that guard code quality
+name: code-guardian
+version: 1.0.0
+description: Skill with hooks that guard code quality
 
 hooks:
   PreToolUse:
@@ -44,3 +43,9 @@ The hooks run automatically when:
 ## Log Location
 
 Activity is logged to `/tmp/code-guardian.log`
+
+## Important Notes
+
+- Skill files must be named `SKILL.md` (uppercase)
+- `name` and `description` must be at the top level of frontmatter (not nested under `skill:`)
+- The skill directory name should match the `name` field
