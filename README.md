@@ -22,11 +22,37 @@ Once validated and merged upstream, this bundle will be archived.
 | **tool-slash-command** | robotdad/amplifier-module-tool-slash-command | main | Extensible custom commands |
 | **app-cli** (required) | robotdad/amplifier-app-cli | feat/custom-slash-commands | Modified CLI with command support |
 
+## Features
+
+### Hooks-Shell Features
+
+| Feature | Description |
+|---------|-------------|
+| **Command hooks** | Shell scripts triggered at lifecycle events |
+| **Prompt hooks** | LLM evaluation for complex decisions |
+| **Parallel execution** | Run multiple hooks concurrently |
+| **Skill-scoped hooks** | Hooks embedded in SKILL.md frontmatter |
+| **Pattern matching** | Regex matchers for selective execution |
+| **Context injection** | Inject feedback into agent context |
+
+### Slash Command Features
+
+| Feature | Description |
+|---------|-------------|
+| **Markdown commands** | Define commands as `.md` files with YAML frontmatter |
+| **Git URL sources** | Share commands from git repositories |
+| **Granular permissions** | Fine-grained bash control: `Bash(git status:*)` |
+| **Command composition** | Commands can invoke other commands |
+| **Model override** | Per-command model selection |
+| **LLM discovery** | AI can list and invoke commands programmatically |
+| **File references** | `@path/to/file` includes file content |
+| **Bash execution** | `` !`command` `` runs shell during template processing |
+
 ## Installation
 
 ### Recommended: Shadow Environment
 
-The safest way to test is in an isolated shadow environment. This avoids any impact to your host Amplifier installation.
+The safest way to test is in an isolated shadow environment:
 
 ```bash
 # From an existing Amplifier session, create a shadow with all components
@@ -44,8 +70,6 @@ amplifier shadow exec "amplifier run"
 
 Installing the modified CLI on your host **will replace your current Amplifier installation**.
 
-#### To Install for Testing
-
 ```bash
 # This REPLACES your current amplifier CLI
 uv tool install git+https://github.com/robotdad/amplifier-app-cli@feat/custom-slash-commands
@@ -54,29 +78,9 @@ uv tool install git+https://github.com/robotdad/amplifier-app-cli@feat/custom-sl
 amplifier --version
 ```
 
-#### To Restore Mainline Amplifier
-
+**To restore mainline:**
 ```bash
-# Reinstall from upstream to restore normal operation
 uv tool install git+https://github.com/microsoft/amplifier --force
-
-# Verify restoration
-amplifier --version
-```
-
-#### Alternative: Isolated venv
-
-If you want to keep both versions available:
-
-```bash
-# Create isolated environment for preview testing
-python -m venv ~/.amplifier-preview
-~/.amplifier-preview/bin/pip install git+https://github.com/robotdad/amplifier-app-cli@feat/custom-slash-commands
-
-# Run preview version explicitly
-~/.amplifier-preview/bin/amplifier run
-
-# Your normal 'amplifier' command remains unchanged
 ```
 
 ## Testing Workflow
@@ -96,12 +100,22 @@ cat > .amplifier/hooks/hooks.json << 'EOF'
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "bash",
+        "matcher": "Bash",
         "hooks": [
           {
             "type": "command", 
-            "command": "echo \"[Hook] Bash: $(cat | jq -r '.input.command')\" >> /tmp/hooks.log"
+            "command": "echo \"[Hook] Bash command detected\" >> /tmp/hooks.log && exit 0"
           }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "parallel": true,
+        "hooks": [
+          {"type": "command", "command": "echo \"[Parallel 1]\" >> /tmp/hooks.log"},
+          {"type": "command", "command": "echo \"[Parallel 2]\" >> /tmp/hooks.log"}
         ]
       }
     ],
@@ -111,7 +125,7 @@ cat > .amplifier/hooks/hooks.json << 'EOF'
         "hooks": [
           {
             "type": "command",
-            "command": "echo \"[Hook] Session started\" >> /tmp/hooks.log"
+            "command": "echo \"[Hook] Session started at $(date)\" >> /tmp/hooks.log"
           }
         ]
       }
@@ -121,8 +135,9 @@ cat > .amplifier/hooks/hooks.json << 'EOF'
 EOF
 ```
 
-### 3. Add example command
+### 3. Add example commands
 
+**Simple command:**
 ```bash
 cat > .amplifier/commands/review.md << 'EOF'
 ---
@@ -134,13 +149,62 @@ Review $ARGUMENTS for code quality and security issues.
 EOF
 ```
 
-### 4. Add example skill with hooks (optional)
+**Command with granular bash permissions:**
+```bash
+cat > .amplifier/commands/git-status.md << 'EOF'
+---
+description: Safe git status check
+allowed-tools:
+  - Bash(git status:*)
+  - Bash(git diff:*)
+  - Bash(git log:*)
+---
+
+## Current Status
+!`git status --short`
+
+## Recent Commits  
+!`git log --oneline -5`
+
+## Changes
+!`git diff --stat`
+EOF
+```
+
+**Command with model override:**
+```bash
+cat > .amplifier/commands/quick.md << 'EOF'
+---
+description: Quick answer using faster model
+model: claude-3-5-haiku-20241022
+---
+
+Give a brief answer to: $ARGUMENTS
+EOF
+```
+
+### 4. Add shared commands from git (in bundle config)
+
+Commands can be sourced from git repositories:
+
+```yaml
+tools:
+  - module: tool-slash-command
+    config:
+      commands:
+        - git+https://github.com/org/shared-commands@v1
+        - git+https://github.com/team/review-tools@main:commands
+```
+
+**Command repo requirements:**
+- Must contain a `.amplifier-commands` marker file
+- Commands discovered recursively from marker location
+
+### 5. Add example skill with hooks
 
 ```bash
 mkdir -p .amplifier/skills/code-guardian
 
-# Note: File MUST be named SKILL.md (uppercase)
-# Note: name and description MUST be at top level (not nested under skill:)
 cat > .amplifier/skills/code-guardian/SKILL.md << 'EOF'
 ---
 name: code-guardian
@@ -149,7 +213,7 @@ version: 1.0.0
 
 hooks:
   PreToolUse:
-    - matcher: "bash"
+    - matcher: "Bash"
       hooks:
         - type: command
           command: "echo \"[Skill Hook] Bash command\" >> /tmp/hooks.log"
@@ -161,7 +225,7 @@ This skill adds hooks that fire when loaded.
 EOF
 ```
 
-### 5. Run and verify
+### 6. Run and verify
 
 ```bash
 # Start session
@@ -175,25 +239,38 @@ tail -f /tmp/hooks.log
 
 | Claude Code Event | Amplifier Event | Status |
 |-------------------|-----------------|--------|
-| PreToolUse | tool:pre | ✅ |
-| PostToolUse | tool:post | ✅ |
-| UserPromptSubmit | prompt:submit | ✅ |
-| SessionStart | session:start | ✅ |
-| SessionEnd | session:end | ✅ |
-| Stop | prompt:complete | ✅ |
-| PreCompact | context:pre_compact | ✅ |
-| PermissionRequest | approval:required | ✅ |
-| Notification | user:notification | ✅ |
+| PreToolUse | tool:pre | Supported |
+| PostToolUse | tool:post | Supported |
+| UserPromptSubmit | prompt:submit | Supported |
+| SessionStart | session:start | Supported |
+| SessionEnd | session:end | Supported |
+| Stop | prompt:complete | Supported |
+| Notification | user:notification | Supported |
+| SubagentStart | subagent:start | Supported |
+| SubagentStop | subagent:stop | Supported |
+
+## Hook Types
+
+| Type | Description | Use Case |
+|------|-------------|----------|
+| `command` | Execute shell command | Fast validation, logging, formatting |
+| `prompt` | LLM evaluation | Complex decisions, security review |
+
+**Prompt hook example:**
+```json
+{
+  "type": "prompt",
+  "prompt": "Review this command for security issues. Return JSON with decision (approve/block) and reason.",
+  "timeout": 60
+}
+```
 
 ## Known Limitations
 
 - Requires modified app-cli (not yet upstream)
-- Prompt-based hooks (Phase 2.5) not yet implemented
-- Command approval integration pending
+- Prompt hooks use session's default provider (model override coming)
 
 ## Skill File Format Requirements
-
-Skills with hooks have specific format requirements:
 
 | Requirement | Details |
 |-------------|---------|
@@ -208,19 +285,10 @@ name: my-skill
 description: What this skill does
 hooks:
   PreToolUse:
-    - matcher: "bash"
+    - matcher: "Bash"
       hooks:
         - type: command
           command: "echo 'hook fired'"
----
-```
-
-**Incorrect format** (will not be discovered):
-```yaml
----
-skill:
-  name: my-skill  # Wrong: nested under skill:
-  description: ...
 ---
 ```
 
