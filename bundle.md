@@ -7,8 +7,13 @@ bundle:
     Uses robotdad forks - for testing before upstream merge.
 
 includes:
-  # Base foundation (from upstream)
-  - bundle: git+https://github.com/microsoft/amplifier-foundation@main
+  # Foundation fork with bundle-level skills support
+  - bundle: git+https://github.com/robotdad/amplifier-foundation@feat/bundle-skills-config
+
+# Remote skill sources - loaded from git URLs
+skills:
+  - git+https://github.com/robotdad/skills@main
+  - git+https://github.com/anthropics/skills@main
 
 # Hooks module - Claude Code compatible shell hooks
 hooks:
@@ -19,9 +24,9 @@ hooks:
 
 # Tools from forks with hooks integration
 tools:
-  # Enhanced skills with skill-scoped hooks
+  # Enhanced skills with git URL sources support
   - name: load_skill
-    module: git+https://github.com/robotdad/amplifier-module-tool-skills@feat/skill-scoped-hooks
+    module: git+https://github.com/robotdad/amplifier-module-tool-skills@feat/git-url-skill-sources
     config:
       skill_dirs:
         - .amplifier/skills
@@ -45,8 +50,9 @@ This bundle integrates the hooks ecosystem components for testing before upstrea
 | Component | Source | Features |
 |-----------|--------|----------|
 | **hooks-shell** | robotdad fork | Claude Code compatible hooks bridge |
-| **tool-skills** | robotdad fork | Skill-scoped hooks in frontmatter |
+| **tool-skills** | robotdad fork | Git URL skill sources + local dirs |
 | **tool-slash-command** | robotdad fork | Extensible custom commands |
+| **foundation** | robotdad fork | Bundle-level `skills:` config |
 
 ## Quick Start
 
