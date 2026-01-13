@@ -13,10 +13,14 @@
 uv tool install git+https://github.com/robotdad/amplifier-app-cli@feat/custom-slash-commands
 ```
 
-### 2. Use the bundle
+### 2. Add and activate the bundle
 
 ```bash
-amplifier bundle use git+https://github.com/robotdad/amplifier-bundle-hooks-preview@main
+# Add to registry (one-time)
+amplifier bundle add git+https://github.com/robotdad/amplifier-bundle-hooks-preview@main
+
+# Activate it
+amplifier bundle use hooks-preview
 ```
 
 ### 3. Start an interactive session
