@@ -1,11 +1,10 @@
 # Module sources for hooks-preview bundle
-# These point to preview repos during development
 # When modules move to microsoft org, update URLs here (not in bundle.md)
 
 overrides:
   modules:
-    # hook-shell is now in microsoft org
+    # These are now in microsoft org
     hook-shell: git+https://github.com/microsoft/amplifier-module-hook-shell@main
-    # These remain in robotdad for now
+    tool-slash-command: git+https://github.com/microsoft/amplifier-module-tool-slash-command@main
+    # This remains in robotdad for now (pending PR to microsoft/amplifier-module-tool-skills)
     tool-skills: git+https://github.com/robotdad/amplifier-module-tool-skills@main
-    tool-slash-command: git+https://github.com/robotdad/amplifier-module-tool-slash-command@main
