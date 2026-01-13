@@ -13,49 +13,50 @@
 uv tool install git+https://github.com/robotdad/amplifier-app-cli@feat/custom-slash-commands
 ```
 
-**To verify:** Run with the bundle and try `/hello`:
-```bash
-amplifier run --bundle git+https://github.com/robotdad/amplifier-bundle-hooks-preview@main
-# Type /hello - if it responds, you have the modified CLI
-```
-
-### 2. Run with the bundle
+### 2. Use the bundle
 
 ```bash
-amplifier run --bundle git+https://github.com/robotdad/amplifier-bundle-hooks-preview@main
+amplifier bundle use git+https://github.com/robotdad/amplifier-bundle-hooks-preview@main
 ```
 
-That's it! The bundle automatically loads:
-- **Example commands** (`/review`, `/commit`) - via git URL, no copying needed
+### 3. Start an interactive session
+
+```bash
+amplifier run
+```
+
+### 4. Verify it works
+
+Type `/hello` in the session. If it responds, you have the modified CLI with commands working.
+
+The bundle automatically loads:
+- **Example commands** (`/hello`, `/review`, `/commit`) - via git URL, no copying needed
 - **hooks-shell module** - ready for your hooks
 - **enhanced skills module** - supports skill-scoped hooks
 
-### 3. Add hooks to your project
+### 5. Add hooks to your project
 
 Hooks must be local (git URL not yet supported). Copy the examples:
 
 ```bash
-# Clone the bundle repo
 git clone https://github.com/robotdad/amplifier-bundle-hooks-preview.git /tmp/hooks-preview
 
-# Copy hooks to your project
 mkdir -p .amplifier/hooks
 cp /tmp/hooks-preview/examples/hooks/hooks.json .amplifier/hooks/
 ```
 
-### 4. (Optional) Add skills with hooks
-
-Skills must also be local. Copy the example:
+### 6. (Optional) Add skills with hooks
 
 ```bash
+mkdir -p .amplifier/skills
 cp -r /tmp/hooks-preview/examples/skills/code-guardian .amplifier/skills/
 ```
 
-### 5. Verify hooks are working
+### 7. Verify hooks are working
 
 ```bash
 # Start a session
-amplifier run --bundle git+https://github.com/robotdad/amplifier-bundle-hooks-preview@main
+amplifier run
 
 # In another terminal, watch the hook log
 tail -f /tmp/hooks-preview.log
@@ -145,6 +146,10 @@ Output: `/tmp/code-guardian.log`
 ## Restoring Mainline Amplifier
 
 ```bash
+# Clear the bundle setting
+amplifier bundle clear
+
+# Reinstall mainline CLI
 uv tool install git+https://github.com/microsoft/amplifier --force
 ```
 
