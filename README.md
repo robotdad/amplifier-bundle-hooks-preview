@@ -26,7 +26,7 @@ amplifier bundle use hooks-preview
 ### 3. Start an interactive session
 
 ```bash
-amplifier run
+amplifier
 ```
 
 ### 4. Verify it works
@@ -60,7 +60,7 @@ cp -r /tmp/hooks-preview/examples/skills/code-guardian .amplifier/skills/
 
 ```bash
 # Start a session
-amplifier run
+amplifier
 
 # In another terminal, watch the hook log
 tail -f /tmp/hooks-preview.log
