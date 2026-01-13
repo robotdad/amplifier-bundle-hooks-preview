@@ -13,12 +13,10 @@
 uv tool install git+https://github.com/robotdad/amplifier-app-cli@feat/custom-slash-commands
 ```
 
-**To verify:** Create a test command and try it:
+**To verify:** Run with the bundle and try `/hello`:
 ```bash
-mkdir -p /tmp/test-cmd/.amplifier/commands
-echo -e "---\ndescription: test\n---\nHello" > /tmp/test-cmd/.amplifier/commands/hello.md
-cd /tmp/test-cmd && amplifier run
-# Type /hello - if it works, you have the modified CLI
+amplifier run --bundle git+https://github.com/robotdad/amplifier-bundle-hooks-preview@main
+# Type /hello - if it responds, you have the modified CLI
 ```
 
 ### 2. Run with the bundle
@@ -69,6 +67,7 @@ tail -f /tmp/hooks-preview.log
 
 | Command | Description |
 |---------|-------------|
+| `/hello` | Simple test to verify CLI works |
 | `/review` | Code review with security focus |
 | `/commit` | Create commits with context (requires approval) |
 
