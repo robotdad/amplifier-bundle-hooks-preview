@@ -50,23 +50,7 @@ Once validated and merged upstream, this bundle will be archived.
 
 ## Installation
 
-### Recommended: Shadow Environment
-
-The safest way to test is in an isolated shadow environment:
-
-```bash
-# From an existing Amplifier session, create a shadow with all components
-amplifier shadow create \
-  --local-source hooks-shell:~/path/to/amplifier-module-hooks-shell \
-  --local-source tool-skills:~/path/to/amplifier-module-tool-skills \
-  --local-source slash-command:~/path/to/amplifier-module-tool-slash-command \
-  --local-source app-cli:~/path/to/amplifier-app-cli
-
-# Run the modified CLI inside the shadow
-amplifier shadow exec "amplifier run"
-```
-
-### Host Installation (Use With Caution)
+### Host Installation
 
 Installing the modified CLI on your host **will replace your current Amplifier installation**.
 
@@ -83,157 +67,72 @@ amplifier --version
 uv tool install git+https://github.com/microsoft/amplifier --force
 ```
 
-## Testing Workflow
+## Quick Start
 
-### 1. Set up test project
-
-```bash
-mkdir -p test-project/.amplifier/{hooks,commands,skills}
-cd test-project
-```
-
-### 2. Add example hooks
+### 1. Clone this bundle
 
 ```bash
-cat > .amplifier/hooks/hooks.json << 'EOF'
-{
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command", 
-            "command": "echo \"[Hook] Bash command detected\" >> /tmp/hooks.log && exit 0"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": ".*",
-        "parallel": true,
-        "hooks": [
-          {"type": "command", "command": "echo \"[Parallel 1]\" >> /tmp/hooks.log"},
-          {"type": "command", "command": "echo \"[Parallel 2]\" >> /tmp/hooks.log"}
-        ]
-      }
-    ],
-    "SessionStart": [
-      {
-        "matcher": ".*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo \"[Hook] Session started at $(date)\" >> /tmp/hooks.log"
-          }
-        ]
-      }
-    ]
-  }
-}
-EOF
+git clone https://github.com/robotdad/amplifier-bundle-hooks-preview.git
+cd amplifier-bundle-hooks-preview
 ```
 
-### 3. Add example commands
-
-**Simple command:**
-```bash
-cat > .amplifier/commands/review.md << 'EOF'
----
-description: Quick code review
-allowed-tools: [read_file, grep, glob]
----
-
-Review $ARGUMENTS for code quality and security issues.
-EOF
-```
-
-**Command with granular bash permissions:**
-```bash
-cat > .amplifier/commands/git-status.md << 'EOF'
----
-description: Safe git status check
-allowed-tools:
-  - Bash(git status:*)
-  - Bash(git diff:*)
-  - Bash(git log:*)
----
-
-## Current Status
-!`git status --short`
-
-## Recent Commits  
-!`git log --oneline -5`
-
-## Changes
-!`git diff --stat`
-EOF
-```
-
-**Command with model override:**
-```bash
-cat > .amplifier/commands/quick.md << 'EOF'
----
-description: Quick answer using faster model
-model: claude-3-5-haiku-20241022
----
-
-Give a brief answer to: $ARGUMENTS
-EOF
-```
-
-### 4. Add shared commands from git (in bundle config)
-
-Commands can be sourced from git repositories:
-
-```yaml
-tools:
-  - module: tool-slash-command
-    config:
-      commands:
-        - git+https://github.com/org/shared-commands@v1
-        - git+https://github.com/team/review-tools@main:commands
-```
-
-**Command repo requirements:**
-- Must contain a `.amplifier-commands` marker file
-- Commands discovered recursively from marker location
-
-### 5. Add example skill with hooks
+### 2. Copy examples to your project
 
 ```bash
-mkdir -p .amplifier/skills/code-guardian
+# Create a test project
+mkdir -p ~/test-project
+cd ~/test-project
 
-cat > .amplifier/skills/code-guardian/SKILL.md << 'EOF'
----
-name: code-guardian
-description: Guards code quality with hooks
-version: 1.0.0
-
-hooks:
-  PreToolUse:
-    - matcher: "Bash"
-      hooks:
-        - type: command
-          command: "echo \"[Skill Hook] Bash command\" >> /tmp/hooks.log"
----
-
-# Code Guardian
-
-This skill adds hooks that fire when loaded.
-EOF
+# Copy the example hooks, commands, and skills
+cp -r /path/to/amplifier-bundle-hooks-preview/examples/hooks .amplifier/
+cp -r /path/to/amplifier-bundle-hooks-preview/examples/commands .amplifier/
+cp -r /path/to/amplifier-bundle-hooks-preview/examples/skills .amplifier/
 ```
 
-### 6. Run and verify
+Or if you cloned to a predictable location:
+```bash
+cd ~/test-project
+cp -r ~/amplifier-bundle-hooks-preview/examples/* .amplifier/
+```
+
+### 3. Run and verify
 
 ```bash
 # Start session
 amplifier run
 
 # In another terminal, watch hook activity
-tail -f /tmp/hooks.log
+tail -f /tmp/hooks-preview.log
 ```
+
+## Included Examples
+
+### `examples/hooks/hooks.json`
+
+Comprehensive hook configuration demonstrating:
+- **SessionStart** - Logs session start, detects resume
+- **PreToolUse** - Logs bash commands and file operations
+- **PostToolUse** - Logs tool completion
+- **UserPromptSubmit** - Logs new prompts
+- **Stop** - Logs response completion
+- **SessionEnd** - Logs session end
+
+All output goes to `/tmp/hooks-preview.log`.
+
+### `examples/commands/`
+
+| Command | Description |
+|---------|-------------|
+| `review.md` | Code review with security focus |
+| `commit.md` | Create commits with context (uses bash, requires approval) |
+
+### `examples/skills/code-guardian/`
+
+A skill with embedded hooks that:
+- Logs Python file modifications
+- Warns about dangerous bash commands (rm -rf, sudo, chmod 777)
+
+Output goes to `/tmp/code-guardian.log`.
 
 ## Event Coverage
 
@@ -256,41 +155,35 @@ tail -f /tmp/hooks.log
 | `command` | Execute shell command | Fast validation, logging, formatting |
 | `prompt` | LLM evaluation | Complex decisions, security review |
 
-**Prompt hook example:**
-```json
-{
-  "type": "prompt",
-  "prompt": "Review this command for security issues. Return JSON with decision (approve/block) and reason.",
-  "timeout": 60
-}
+## Git URL Command Sources
+
+Share commands across projects by referencing git repositories:
+
+```yaml
+tools:
+  - module: tool-slash-command
+    config:
+      commands:
+        - git+https://github.com/org/shared-commands@v1
+        - git+https://github.com/team/review-tools@main:commands
 ```
+
+**Requirements:**
+- Repo must contain a `.amplifier-commands` marker file
+- Commands discovered recursively from marker location
 
 ## Known Limitations
 
 - Requires modified app-cli (not yet upstream)
 - Prompt hooks use session's default provider (model override coming)
 
-## Skill File Format Requirements
+## Skill File Format
 
 | Requirement | Details |
 |-------------|---------|
 | Filename | Must be `SKILL.md` (uppercase) |
 | Frontmatter | `name` and `description` at top level (not nested) |
 | Directory | Should match the `name` field |
-
-**Correct format:**
-```yaml
----
-name: my-skill
-description: What this skill does
-hooks:
-  PreToolUse:
-    - matcher: "Bash"
-      hooks:
-        - type: command
-          command: "echo 'hook fired'"
----
-```
 
 ## After Testing
 
