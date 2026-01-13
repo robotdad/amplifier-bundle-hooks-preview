@@ -60,6 +60,16 @@ uv tool install git+https://github.com/robotdad/amplifier-app-cli@feat/custom-sl
 
 # Verify you have the modified version
 amplifier --version
+# Should show: amplifier, version YYYY.MM.DD-<commit>
+# The commit hash should match the feat/custom-slash-commands branch
+```
+
+**To verify custom commands work:**
+```bash
+mkdir -p /tmp/test-cmd/.amplifier/commands
+echo -e "---\ndescription: test\n---\nHello" > /tmp/test-cmd/.amplifier/commands/hello.md
+cd /tmp/test-cmd && amplifier run
+# Type /hello - if it works, you have the modified CLI
 ```
 
 **To restore mainline:**
