@@ -1,0 +1,9 @@
+# Module sources for hooks-preview bundle
+# These point to preview repos during development
+# When modules move to microsoft org, update URLs here (not in bundle.md)
+
+overrides:
+  modules:
+    hooks-shell: git+https://github.com/robotdad/amplifier-module-hooks-shell@main
+    tool-skills: git+https://github.com/robotdad/amplifier-module-tool-skills@main
+    tool-slash-command: git+https://github.com/robotdad/amplifier-module-tool-slash-command@main

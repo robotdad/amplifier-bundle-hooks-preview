@@ -1,0 +1,8 @@
+# Copy to settings.local.yaml for local development
+# This file is gitignored - your machine-specific paths
+
+overrides:
+  modules:
+    hooks-shell: ~/repos/amplifier-module-hooks-shell
+    tool-skills: ~/repos/amplifier-module-tool-skills
+    tool-slash-command: ~/repos/amplifier-module-tool-slash-command

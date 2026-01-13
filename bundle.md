@@ -4,7 +4,7 @@ bundle:
   version: 0.1.0
   description: |
     Preview bundle integrating hooks-shell, enhanced skills, and slash commands.
-    Uses robotdad forks - for testing before upstream merge.
+    Module sources configured via .amplifier/settings.yaml (portable pattern).
 
 includes:
   # Base foundation (from upstream)
@@ -13,15 +13,15 @@ includes:
 # Hooks module - Claude Code compatible shell hooks
 hooks:
   - name: shell-hooks
-    module: git+https://github.com/robotdad/amplifier-module-hooks-shell@main
+    module: hooks-shell
     config:
       enabled: true
 
-# Tools from forks with hooks integration
+# Tools from preview modules
 tools:
   # Enhanced skills with skill-scoped hooks
   - name: load_skill
-    module: git+https://github.com/robotdad/amplifier-module-tool-skills@feat/skill-scoped-hooks
+    module: tool-skills
     config:
       skill_dirs:
         - .amplifier/skills
@@ -29,11 +29,8 @@ tools:
 
   # Extensible slash commands
   - name: slash_command
-    module: git+https://github.com/robotdad/amplifier-module-tool-slash-command@main
+    module: tool-slash-command
     config:
-      # Example commands from this bundle (auto-loaded via git URL)
-      commands:
-        - git+https://github.com/robotdad/amplifier-bundle-hooks-preview@main:examples/commands
       # Local command directories (user can add their own)
       command_dirs:
         - .amplifier/commands
@@ -46,21 +43,34 @@ This bundle integrates the hooks ecosystem components for testing before upstrea
 
 ## Components
 
-| Component | Source | Features |
-|-----------|--------|----------|
-| **hooks-shell** | robotdad fork | Claude Code compatible hooks bridge |
-| **tool-skills** | robotdad fork | Skill-scoped hooks in frontmatter |
-| **tool-slash-command** | robotdad fork | Extensible custom commands |
+| Component | Module Name | Features |
+|-----------|-------------|----------|
+| **hooks-shell** | `hooks-shell` | Claude Code compatible hooks bridge |
+| **tool-skills** | `tool-skills` | Skill-scoped hooks in frontmatter |
+| **tool-slash-command** | `tool-slash-command` | Extensible custom commands |
 
-## Quick Start
+## Setup
 
-### 1. Install the bundle
+### 1. Clone and use the bundle
 
 ```bash
-amplifier bundle use git+https://github.com/robotdad/amplifier-bundle-hooks-preview@main
+git clone https://github.com/robotdad/amplifier-bundle-hooks-preview
+cd amplifier-bundle-hooks-preview
+amplifier bundle use .
 ```
 
-### 2. Create a test hook
+The `.amplifier/settings.yaml` in this repo points to the preview module sources.
+
+### 2. (Optional) Use local checkouts for development
+
+Copy the example and point to your local repos:
+
+```bash
+cp .amplifier/settings.local.yaml.example .amplifier/settings.local.yaml
+# Edit paths to point to your local checkouts
+```
+
+### 3. Create a test hook
 
 ```bash
 mkdir -p .amplifier/hooks
@@ -94,7 +104,7 @@ cat > .amplifier/hooks/hooks.json << 'EOF'
 EOF
 ```
 
-### 3. Create a custom command
+### 4. Create a custom command
 
 ```bash
 mkdir -p .amplifier/commands
@@ -112,15 +122,15 @@ Review {{$1 or "the recent changes"}} for:
 EOF
 ```
 
-### 4. Create a skill with hooks
+### 5. Create a skill with hooks
 
 ```bash
 mkdir -p .amplifier/skills/my-workflow
-cat > .amplifier/skills/my-workflow/skill.md << 'EOF'
+cat > .amplifier/skills/my-workflow/SKILL.md << 'EOF'
 ---
-skill:
-  name: my-workflow
-  version: 1.0.0
+name: my-workflow
+version: 1.0.0
+description: Custom workflow with hooks
 
 hooks:
   PreToolUse:
@@ -136,7 +146,7 @@ Custom workflow instructions here.
 EOF
 ```
 
-### 5. Run Amplifier
+### 6. Run Amplifier
 
 ```bash
 amplifier run
@@ -146,23 +156,23 @@ amplifier run
 
 | Claude Code Event | Amplifier Event | Status |
 |-------------------|-----------------|--------|
-| PreToolUse | tool:pre | ✅ |
-| PostToolUse | tool:post | ✅ |
-| UserPromptSubmit | prompt:submit | ✅ |
-| SessionStart | session:start | ✅ |
-| SessionEnd | session:end | ✅ |
-| Stop | prompt:complete | ✅ |
-| PreCompact | context:pre_compact | ✅ |
-| PermissionRequest | approval:required | ✅ |
-| Notification | user:notification | ✅ |
+| PreToolUse | tool:pre | Supported |
+| PostToolUse | tool:post | Supported |
+| UserPromptSubmit | prompt:submit | Supported |
+| SessionStart | session:start | Supported |
+| SessionEnd | session:end | Supported |
+| Stop | prompt:complete | Supported |
+| PreCompact | context:pre_compact | Supported |
+| PermissionRequest | approval:required | Supported |
+| Notification | user:notification | Supported |
 
 ## Integration Points
 
-### Hooks → Skills
+### Hooks -> Skills
 
 Skills can define hooks in their frontmatter. When a skill is loaded, its hooks become active. When unloaded, hooks are removed.
 
-### Hooks → Commands
+### Hooks -> Commands
 
 Commands with `requires-approval: true` will (once integrated) emit `approval:required` events that hooks can intercept.
 
@@ -172,6 +182,15 @@ Hooks can persist environment variables across executions:
 ```bash
 echo "MY_VAR=value" >> "$AMPLIFIER_ENV_FILE"
 ```
+
+## Module Source Configuration
+
+This bundle uses the **portable module names** pattern. Actual sources are defined in `.amplifier/settings.yaml`:
+
+- **settings.yaml** (committed) - Points to preview repos for shared testing
+- **settings.local.yaml** (gitignored) - Override with local checkouts for development
+
+See `settings.local.yaml.example` for the local development template.
 
 ## Testing
 
