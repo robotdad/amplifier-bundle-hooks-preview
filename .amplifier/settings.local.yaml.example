@@ -3,6 +3,6 @@
 
 overrides:
   modules:
-    hooks-shell: ~/repos/amplifier-module-hooks-shell
+    hook-shell: ~/repos/amplifier-module-hook-shell
     tool-skills: ~/repos/amplifier-module-tool-skills
     tool-slash-command: ~/repos/amplifier-module-tool-slash-command

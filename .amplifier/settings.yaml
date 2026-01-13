@@ -4,6 +4,8 @@
 
 overrides:
   modules:
-    hooks-shell: git+https://github.com/robotdad/amplifier-module-hooks-shell@main
+    # hook-shell is now in microsoft org
+    hook-shell: git+https://github.com/microsoft/amplifier-module-hook-shell@main
+    # These remain in robotdad for now
     tool-skills: git+https://github.com/robotdad/amplifier-module-tool-skills@main
     tool-slash-command: git+https://github.com/robotdad/amplifier-module-tool-slash-command@main

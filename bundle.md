@@ -13,7 +13,7 @@ includes:
 # Hooks module - Claude Code compatible shell hooks
 hooks:
   - name: shell-hooks
-    module: hooks-shell
+    module: hook-shell
     config:
       enabled: true
 
