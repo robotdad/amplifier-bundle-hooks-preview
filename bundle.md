@@ -31,6 +31,10 @@ tools:
   - name: slash_command
     module: git+https://github.com/robotdad/amplifier-module-tool-slash-command@main
     config:
+      # Example commands from this bundle (auto-loaded via git URL)
+      commands:
+        - git+https://github.com/robotdad/amplifier-bundle-hooks-preview@main:examples/commands
+      # Local command directories (user can add their own)
       command_dirs:
         - .amplifier/commands
         - ~/.amplifier/commands

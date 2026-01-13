@@ -4,67 +4,16 @@
 
 > **This bundle is for testing only.** It pulls from development forks and requires a modified CLI. Do not use for production work.
 
-## Purpose
+## Quick Start
 
-This bundle exists to validate the integrated hooks ecosystem:
-- Human acceptance testing of hooks, commands, and skills working together
-- AI-assisted testing in shadow environments
-- Proving the architecture before submitting upstream PRs
-
-Once validated and merged upstream, this bundle will be archived.
-
-## Components
-
-| Component | Repo | Branch | Description |
-|-----------|------|--------|-------------|
-| **hooks-shell** | robotdad/amplifier-module-hooks-shell | main | Claude Code compatible hooks bridge |
-| **tool-skills** | robotdad/amplifier-module-tool-skills | feat/skill-scoped-hooks | Skills with hooks in frontmatter |
-| **tool-slash-command** | robotdad/amplifier-module-tool-slash-command | main | Extensible custom commands |
-| **app-cli** (required) | robotdad/amplifier-app-cli | feat/custom-slash-commands | Modified CLI with command support |
-
-## Features
-
-### Hooks-Shell Features
-
-| Feature | Description |
-|---------|-------------|
-| **Command hooks** | Shell scripts triggered at lifecycle events |
-| **Prompt hooks** | LLM evaluation for complex decisions |
-| **Parallel execution** | Run multiple hooks concurrently |
-| **Skill-scoped hooks** | Hooks embedded in SKILL.md frontmatter |
-| **Pattern matching** | Regex matchers for selective execution |
-| **Context injection** | Inject feedback into agent context |
-
-### Slash Command Features
-
-| Feature | Description |
-|---------|-------------|
-| **Markdown commands** | Define commands as `.md` files with YAML frontmatter |
-| **Git URL sources** | Share commands from git repositories |
-| **Granular permissions** | Fine-grained bash control: `Bash(git status:*)` |
-| **Command composition** | Commands can invoke other commands |
-| **Model override** | Per-command model selection |
-| **LLM discovery** | AI can list and invoke commands programmatically |
-| **File references** | `@path/to/file` includes file content |
-| **Bash execution** | `` !`command` `` runs shell during template processing |
-
-## Installation
-
-### Host Installation
-
-Installing the modified CLI on your host **will replace your current Amplifier installation**.
+### 1. Install the modified CLI
 
 ```bash
 # This REPLACES your current amplifier CLI
 uv tool install git+https://github.com/robotdad/amplifier-app-cli@feat/custom-slash-commands
-
-# Verify you have the modified version
-amplifier --version
-# Should show: amplifier, version YYYY.MM.DD-<commit>
-# The commit hash should match the feat/custom-slash-commands branch
 ```
 
-**To verify custom commands work:**
+**To verify:** Create a test command and try it:
 ```bash
 mkdir -p /tmp/test-cmd/.amplifier/commands
 echo -e "---\ndescription: test\n---\nHello" > /tmp/test-cmd/.amplifier/commands/hello.md
@@ -72,77 +21,98 @@ cd /tmp/test-cmd && amplifier run
 # Type /hello - if it works, you have the modified CLI
 ```
 
-**To restore mainline:**
+### 2. Run with the bundle
+
 ```bash
-uv tool install git+https://github.com/microsoft/amplifier --force
+amplifier run --bundle git+https://github.com/robotdad/amplifier-bundle-hooks-preview@main
 ```
 
-## Quick Start
+That's it! The bundle automatically loads:
+- **Example commands** (`/review`, `/commit`) - via git URL, no copying needed
+- **hooks-shell module** - ready for your hooks
+- **enhanced skills module** - supports skill-scoped hooks
 
-### 1. Clone this bundle
+### 3. Add hooks to your project
+
+Hooks must be local (git URL not yet supported). Copy the examples:
 
 ```bash
-git clone https://github.com/robotdad/amplifier-bundle-hooks-preview.git
-cd amplifier-bundle-hooks-preview
+# Clone the bundle repo
+git clone https://github.com/robotdad/amplifier-bundle-hooks-preview.git /tmp/hooks-preview
+
+# Copy hooks to your project
+mkdir -p .amplifier/hooks
+cp /tmp/hooks-preview/examples/hooks/hooks.json .amplifier/hooks/
 ```
 
-### 2. Copy examples to your project
+### 4. (Optional) Add skills with hooks
+
+Skills must also be local. Copy the example:
 
 ```bash
-# Create a test project
-mkdir -p ~/test-project
-cd ~/test-project
-
-# Copy the example hooks, commands, and skills
-cp -r /path/to/amplifier-bundle-hooks-preview/examples/hooks .amplifier/
-cp -r /path/to/amplifier-bundle-hooks-preview/examples/commands .amplifier/
-cp -r /path/to/amplifier-bundle-hooks-preview/examples/skills .amplifier/
+cp -r /tmp/hooks-preview/examples/skills/code-guardian .amplifier/skills/
 ```
 
-Or if you cloned to a predictable location:
-```bash
-cd ~/test-project
-cp -r ~/amplifier-bundle-hooks-preview/examples/* .amplifier/
-```
-
-### 3. Run and verify
+### 5. Verify hooks are working
 
 ```bash
-# Start session
-amplifier run
+# Start a session
+amplifier run --bundle git+https://github.com/robotdad/amplifier-bundle-hooks-preview@main
 
-# In another terminal, watch hook activity
+# In another terminal, watch the hook log
 tail -f /tmp/hooks-preview.log
 ```
 
-## Included Examples
+## What's Included
 
-### `examples/hooks/hooks.json`
-
-Comprehensive hook configuration demonstrating:
-- **SessionStart** - Logs session start, detects resume
-- **PreToolUse** - Logs bash commands and file operations
-- **PostToolUse** - Logs tool completion
-- **UserPromptSubmit** - Logs new prompts
-- **Stop** - Logs response completion
-- **SessionEnd** - Logs session end
-
-All output goes to `/tmp/hooks-preview.log`.
-
-### `examples/commands/`
+### Commands (auto-loaded via git URL)
 
 | Command | Description |
 |---------|-------------|
-| `review.md` | Code review with security focus |
-| `commit.md` | Create commits with context (uses bash, requires approval) |
+| `/review` | Code review with security focus |
+| `/commit` | Create commits with context (requires approval) |
 
-### `examples/skills/code-guardian/`
+### Example Hooks (`examples/hooks/hooks.json`)
+
+Logs activity for these events:
+- SessionStart, SessionEnd
+- PreToolUse (bash, file operations)
+- PostToolUse
+- UserPromptSubmit
+- Stop
+
+Output: `/tmp/hooks-preview.log`
+
+### Example Skill (`examples/skills/code-guardian/`)
 
 A skill with embedded hooks that:
 - Logs Python file modifications
-- Warns about dangerous bash commands (rm -rf, sudo, chmod 777)
+- Warns about dangerous bash commands
 
-Output goes to `/tmp/code-guardian.log`.
+Output: `/tmp/code-guardian.log`
+
+## Features
+
+### Hooks-Shell
+
+| Feature | Description |
+|---------|-------------|
+| Command hooks | Shell scripts triggered at lifecycle events |
+| Prompt hooks | LLM evaluation for complex decisions |
+| Parallel execution | Run multiple hooks concurrently |
+| Skill-scoped hooks | Hooks embedded in SKILL.md frontmatter |
+| Pattern matching | Regex matchers for selective execution |
+| Context injection | Inject feedback into agent context |
+
+### Slash Commands
+
+| Feature | Description |
+|---------|-------------|
+| Markdown commands | Define commands as `.md` files with YAML frontmatter |
+| Git URL sources | Share commands from git repositories (auto-loaded!) |
+| Granular permissions | Fine-grained bash control: `Bash(git status:*)` |
+| Model override | Per-command model selection |
+| Bash execution | `` !`command` `` runs shell during template processing |
 
 ## Event Coverage
 
@@ -158,53 +128,37 @@ Output goes to `/tmp/code-guardian.log`.
 | SubagentStart | subagent:start | Supported |
 | SubagentStop | subagent:stop | Supported |
 
-## Hook Types
+## Components
 
-| Type | Description | Use Case |
-|------|-------------|----------|
-| `command` | Execute shell command | Fast validation, logging, formatting |
-| `prompt` | LLM evaluation | Complex decisions, security review |
-
-## Git URL Command Sources
-
-Share commands across projects by referencing git repositories:
-
-```yaml
-tools:
-  - module: tool-slash-command
-    config:
-      commands:
-        - git+https://github.com/org/shared-commands@v1
-        - git+https://github.com/team/review-tools@main:commands
-```
-
-**Requirements:**
-- Repo must contain a `.amplifier-commands` marker file
-- Commands discovered recursively from marker location
+| Component | Repo | Branch |
+|-----------|------|--------|
+| hooks-shell | robotdad/amplifier-module-hooks-shell | main |
+| tool-skills | robotdad/amplifier-module-tool-skills | feat/skill-scoped-hooks |
+| tool-slash-command | robotdad/amplifier-module-tool-slash-command | main |
+| app-cli | robotdad/amplifier-app-cli | feat/custom-slash-commands |
 
 ## Known Limitations
 
 - Requires modified app-cli (not yet upstream)
+- Hooks and skills must be local (git URL support not yet implemented for these)
 - Prompt hooks use session's default provider (model override coming)
 
-## Skill File Format
+## Restoring Mainline Amplifier
 
-| Requirement | Details |
-|-------------|---------|
-| Filename | Must be `SKILL.md` (uppercase) |
-| Frontmatter | `name` and `description` at top level (not nested) |
-| Directory | Should match the `name` field |
+```bash
+uv tool install git+https://github.com/microsoft/amplifier --force
+```
 
 ## After Testing
 
 Once acceptance testing is complete:
 
 1. **hooks-shell** → New repo microsoft/amplifier-module-hooks-shell
-2. **tool-skills** → PR to microsoft/amplifier-module-tool-skills  
+2. **tool-skills** → PR to microsoft/amplifier-module-tool-skills
 3. **tool-slash-command** → New repo microsoft/amplifier-module-tool-slash-command
 4. **app-cli** → PR to microsoft/amplifier-app-cli
 
-This bundle will then be archived or updated to pull from upstream.
+This bundle will then be archived.
 
 ## License
 
